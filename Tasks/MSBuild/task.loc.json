@@ -112,16 +112,6 @@
       }
     },
     {
-      "name": "requireMSBuildVersion",
-      "type": "boolean",
-      "label": "ms-resource:loc.input.label.requireMSBuildVersion",
-      "required": false,
-      "groupName": "advanced",
-      "defaultValue": "false",
-      "helpMarkDown": "ms-resource:loc.input.help.requireMSBuildVersion",
-      "visibleRule": "msbuildLocationMethod = version"
-    },
-    {
       "name": "msbuildArchitecture",
       "type": "pickList",
       "label": "ms-resource:loc.input.label.msbuildArchitecture",
@@ -149,8 +139,7 @@
   "instanceNameFormat": "ms-resource:loc.instanceNameFormat",
   "execution": {
     "PowerShell3": {
-      "target": "$(currentDirectory)\\MSBuild_PSExe.ps1",
-      "argumentFormat": ""
+      "target": "MSBuild_PS3.ps1"
     },
     "PowerShell": {
       "target": "$(currentDirectory)\\MSBuild.ps1",

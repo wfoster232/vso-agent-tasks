@@ -21,8 +21,6 @@
   "loc.input.label.msbuildLocationMethod": "MSBuild",
   "loc.input.label.msbuildVersion": "MSBuild Version",
   "loc.input.help.msbuildVersion": "If the preferred version cannot be found, the latest version found will be used instead.",
-  "loc.input.label.requireMSBuildVersion": "Require MSBuild Version",
-  "loc.input.help.requireMSBuildVersion": "Fail if the preferred version of MSBuild cannot be found.",
   "loc.input.label.msbuildArchitecture": "MSBuild Architecture",
   "loc.input.help.msbuildArchitecture": "Optionally supply the architecture (x86, x64) of MSBuild to run.",
   "loc.input.label.msbuildLocation": "Path to MSBuild",
