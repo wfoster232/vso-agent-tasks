@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 17
+        "Patch": 18
     },
     "demands": [
         "msbuild",
@@ -110,8 +110,7 @@
     "instanceNameFormat": "Build solution $(solution)",
     "execution": {
         "PowerShell3": {
-            "target": "$(currentDirectory)\\VSBuild_PSExe.ps1",
-            "argumentFormat": ""
+            "target": "VSBuild_PS3.ps1"
         },
         "PowerShell": {
             "target": "$(currentDirectory)\\VSBuild.ps1",

@@ -105,8 +105,7 @@
     "instanceNameFormat": "Publish symbols path: $(SymbolsPath)",
     "execution": {
         "PowerShell3": {
-            "target": "$(currentDirectory)\\PublishSymbols_PSExe.ps1",
-            "argumentFormat": ""
+            "target": "PublishSymbols_PS3.ps1"
         },
         "PowerShell": {
             "target": "$(currentDirectory)\\PublishSymbols.ps1",
