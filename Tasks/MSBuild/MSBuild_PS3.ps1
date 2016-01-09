@@ -14,10 +14,7 @@ try {
     [bool]$logProjectEvents = Get-VstsInput -Name LogProjectEvents -AsBool
     [string]$msBuildVersion = Get-VstsInput -Name MSBuildVersion
     [string]$msBuildArchitecture = Get-VstsInput -Name MSBuildArchitecture
-    if (!$OmitDotSource) {
-        . $PSScriptRoot\Helpers_PS3.ps1
-    }
-
+    Import-Module -Name $PSScriptRoot\Helpers\Helpers.psm1
     $solutionFiles = Get-SolutionFiles -Solution $solution
     $msBuildArguments = Format-MSBuildArguments -MSBuildArguments $msBuildArguments -Platform $platform -Configuration $configuration
     $msBuildLocation = Select-MSBuildLocation -Method $msBuildLocationMethod -Location $msBuildLocation -Version $msBuildVersion -Architecture $msBuildArchitecture
