@@ -108,16 +108,6 @@
                 "4.0":"MSBuild 4.0"
             }
         },
-        {
-            "name": "requireMSBuildVersion",
-            "type": "boolean",
-            "label": "Require MSBuild Version",
-            "required": false,
-            "groupName":"advanced",
-            "defaultValue": "false",
-            "helpMarkDown": "Fail if the preferred version of MSBuild cannot be found.",
-            "visibleRule": "msbuildLocationMethod = version"
-        },
         { 
             "name": "msbuildArchitecture", 
             "type": "pickList", 
