@@ -10,7 +10,6 @@ param(
     [string]$RestoreNuGetPackages,
     [string]$LogProjectEvents,
     [string]$MSBuildVersion,
-    [string]$RequireMSBuildVersion,
     [string]$MSBuildArchitecture,
     [string]$OmitDotSource
 )
@@ -26,7 +25,6 @@ Write-Verbose "Clean = $Clean"
 Write-Verbose "RestoreNuGetPackages = $RestoreNuGetPackages"
 Write-Verbose "LogProjectEvents = $LogProjectEvents"
 Write-Verbose "MSBuildVersion = $MSBuildVersion"
-Write-Verbose "RequireMSBuildVersion = $RequireMSBuildVersion"
 Write-Verbose "MSBuildArchitecture = $MSBuildArchitecture"
 
 # Import the Task.Common and Task.Internal dll that has all the cmdlets we need for Build
@@ -45,11 +43,9 @@ Write-Verbose "RestoreNuGetPackages (converted) = $RestoreNuGetPackages"
 Write-Verbose "LogProjectEvents (converted) = $LogProjectEvents"
 [bool]$Clean = Convert-String $Clean Boolean
 Write-Verbose "Clean (converted) = $Clean"
-[bool]$RequireMSBuildVersion = Convert-String $RequireMSBuildVersion Boolean
-Write-Verbose "RequireMSBuildVersion (converted) = $RequireMSBuildVersion"
 
 $solutionFiles = Get-SolutionFiles -Solution $Solution
 $MSBuildArguments = Format-MSBuildArguments -MSBuildArguments $MSBuildArguments -Platform $Platform -Configuration $Configuration
-$MSBuildLocation = Select-MSBuildLocation -Method $MSBuildLocationMethod -Location $MSBuildLocation -Version $MSBuildVersion -RequireVersion:$RequireMSBuildVersion -Architecture $MSBuildArchitecture
+$MSBuildLocation = Select-MSBuildLocation -Method $MSBuildLocationMethod -Location $MSBuildLocation -Version $MSBuildVersion -Architecture $MSBuildArchitecture
 Invoke-BuildTools -NuGetRestore:$RestoreNuGetPackages -SolutionFiles $solutionFiles -MSBuildLocation $MSBuildLocation -MSBuildArguments $MSBuildArguments -Clean:$Clean -NoTimelineLogger:(!$LogProjectEvents)
 Write-Verbose "Leaving script MSBuild.ps1"
