@@ -29,10 +29,10 @@ function Invoke-BuildTools {
             }
 
             if ($Clean) {
-                Invoke-MSBuild -ProjectFile $file -Targets Clean -LogFile "$file-clean.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
+                Invoke-MSBuild -ProjectFile $file -Targets Clean <#-LogFile "$file-clean.log"#> -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
             }
 
-            Invoke-MSBuild -ProjectFile $file -LogFile "$file.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
+            Invoke-MSBuild -ProjectFile $file <#-LogFile "$file.log"#> -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
         }
     } finally {
         Trace-VstsLeavingInvocation $MyInvocation
@@ -233,10 +233,9 @@ function Invoke-MSBuild {
             } else {
                 Invoke-VstsTool -FileName $MSBuildPath -Arguments $arguments -RequireExitCodeZero |
                     ForEach-Object {
-                        # TODO: THIS COULD PROBABLY BE SPED UP BY CHECKING FOR "##vso" BEFORE CALLING THE FUNCTION.
-                        # IT WOULD BE A REDUNDANT CHECK. HOWEVER, THE ##vso COMMANDS APPEAR VERY INFREQUENTLY IN
-                        # THE OUTPUT RELATIVE TO THE TOTAL OUTPUT.
-                        if ($command = ConvertFrom-SerializedLoggingCommand -Message $_) {
+                        if ($_ -and
+                            $_.IndexOf($script:loggingCommandPrefix) -ge 0 -and
+                            ($command = ConvertFrom-SerializedLoggingCommand -Message $_)) {
                             if ($command.Area -eq 'task' -and
                                 $command.Event -eq 'logissue' -and
                                 $command.Properties['type'] -eq 'error') {
