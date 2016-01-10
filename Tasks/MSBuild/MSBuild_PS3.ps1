@@ -15,7 +15,7 @@ try {
     [bool]$logProjectEvents = Get-VstsInput -Name LogProjectEvents -AsBool
     [string]$msBuildVersion = Get-VstsInput -Name MSBuildVersion
     [string]$msBuildArchitecture = Get-VstsInput -Name MSBuildArchitecture
-    if (!OmitDotSource) {
+    if (!$OmitDotSource) {
         . $PSScriptRoot\Select-MSBuildLocation_PS3.ps1
     }
 
