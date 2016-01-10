@@ -29,10 +29,10 @@ function Invoke-BuildTools {
             }
 
             if ($Clean) {
-                Invoke-MSBuild -ProjectFile $file -Targets Clean <#-LogFile "$file-clean.log"#> -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
+                Invoke-MSBuild -ProjectFile $file -Targets Clean -LogFile "$file-clean.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
             }
 
-            Invoke-MSBuild -ProjectFile $file <#-LogFile "$file.log"#> -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
+            Invoke-MSBuild -ProjectFile $file -LogFile "$file.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
         }
     } finally {
         Trace-VstsLeavingInvocation $MyInvocation
