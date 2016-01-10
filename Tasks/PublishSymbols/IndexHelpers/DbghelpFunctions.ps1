@@ -11,7 +11,7 @@ function Add-DbghelpLibrary {
             if ($module.FileName -eq $filePath) {
                 Write-Verbose "Module dbghelp.dll is already loaded from the expected file path."
             } else {
-                Write-Warning (Get-VstsLocString -Key "LibraryDbghelpDllAlreadyLoadedFromUnexpectedPath0Expected1" -ArgumentList $($module.FileName), $filePath)
+                Write-Warning (Get-VstsLocString -Key UnexpectedDbghelpdllExpected0Actual1 -ArgumentList $filePath, $module.FileName)
             }
 
             # Don't short-circuit the loop. The module could be loaded more
@@ -127,14 +127,14 @@ function New-IndexedSourcesNotRetrievedMessage {
         [string]$SymbolsFilePath,
         [string]$Message)
 
-    Get-VstsLocString -Key 'IndexedSourceInformationCouldNotBeRetrievedFrom01' -ArgumentList $SymbolsFilePath, $Message
+    Get-VstsLocString -Key SourceInfoNotRetrievedFrom0Message1 -ArgumentList $SymbolsFilePath, $Message
 }
 
 function New-Win32ErrorMessage {
     [CmdletBinding()]
     param([string]$Method)
 
-    Get-VstsLocString -Key 'EncounteredWin32Error0FromMethod1' -ArgumentList (Get-LastWin32Error), $Method
+    Get-VstsLocString -Key Win32Error0FromMethod1 -ArgumentList (Get-LastWin32Error), $Method
 }
 
 function Remove-DbghelpLibrary {
@@ -149,7 +149,7 @@ function Remove-DbghelpLibrary {
 
         if (![IndexHelpers.Dbghelp.NativeMethods]::FreeLibrary($HModule)) {
             $errorCode = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-            Write-Warning (Get-LocalizedString -Key "FailedToFreeLibraryDbghelpDllErrorCode0" -ArgumentList $errorCode)
+            Write-Warning (Get-VstsLocString -Key FreeLibraryDbghelpDllError0 -ArgumentList $errorCode)
         }
     } finally {
         Trace-VstsLeavingInvocation $MyInvocation

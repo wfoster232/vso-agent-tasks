@@ -1,7 +1,7 @@
 function Invoke-IndexSources {
     [CmdletBinding()]
     param(
-        [string[]]$SymbolsFilePaths = $(throw 'Missing SymbolsFilePaths'),
+        [string[]]$SymbolsFilePaths,
         [switch]$TreatNotIndexedAsWarning
     )
 
@@ -9,19 +9,16 @@ function Invoke-IndexSources {
     try {
         # Validate at least one symbols file.
         if (!$SymbolsFilePaths) {
-            Write-Warning (Get-VstsLocString -Key 'NoFilesSelectedForIndexing');
+            Write-Warning (Get-VstsLocString -Key NoFilesForIndexing);
             return
         }
 
-# TODO: THIS SHOULD BE RESOLVED IN A DIFFERENT WAY
         # Resolve location of pdbstr.exe.
-        if (!($pdbstrPath = Get-VstsAgentToolPath -Name 'Pdbstr\pdbstr.exe')) {
-            throw (Get-VstsLocString -Key 'CouldNotFindPdbstrExe')
-        }
+        $pdbstrPath = Assert-VstsPath -LiteralPath "$env:Agent_HomeDirectory\Agent\Worker\Tools\Pdbstr\pdbstr.exe" -PathType Leaf -PassThru
 
         # Warn if spaces in the temp path.
         if ("$env:TMP".Contains(' ')) {
-            Write-Warning (Get-VstsLocString -Key 'SourceFilesMayNotBeIndexedProperlyTempFolderContainsSpaces')
+            Write-Warning (Get-VstsLocString -Key SpacesInTemp)
             # Don't short-circuit. Just try anyway even though it will likely fail.
         }
 
@@ -41,10 +38,10 @@ function Invoke-IndexSources {
 
             # Index the source files
             foreach ($symbolsFilePath in $SymbolsFilePaths) {
-                if (!$symbolsFilePath.EndsWith('.pdb', [System.StringComparison]::OrdinalIgnoreCase)) {
-                    Write-Verbose "Skipping: $symbolsFilePath"
-                    continue
-                }
+                #if (!$symbolsFilePath.EndsWith('.pdb', [System.StringComparison]::OrdinalIgnoreCase)) {
+                #    Write-Verbose "Skipping: $symbolsFilePath"
+                #    continue
+                #}
 
                 # Get the source file paths embedded in the symbols file.
                 [string[]]$sourceFilePaths = Get-SourceFilePaths -SymbolsFilePath $symbolsFilePath -SourcesRootPath $provider.SourcesRootPath -TreatNotIndexedAsWarning:$TreatNotIndexedAsWarning

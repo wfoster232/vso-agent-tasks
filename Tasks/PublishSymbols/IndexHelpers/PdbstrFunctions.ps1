@@ -52,7 +52,6 @@ function Add-SourceServerStream {
                             Write-Verbose $_
                         }
                     }
-                Write-Verbose "Pdbstr.exe exit code: $LASTEXITCODE"
 
                 # Copy the temp symbols file back over the original file.
                 if ($SymbolsFilePath -ne $originalSymbolsFilePath) {

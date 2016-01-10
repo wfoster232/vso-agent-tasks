@@ -14,7 +14,7 @@ function Get-SourceFilePaths {
     $sourceFilePaths = @(Get-DbghelpSourceFilePaths -SymbolsFilePath $SymbolsFilePath)
     if (!$sourceFilePaths.Count) {
         # Warn if no source file paths were contained in the PDB file.
-        [string]$message = Get-VstsLocString -Key 'UnableToIndexSourcesForSymbolsFile0DoesNotContainSourceFiles.' -ArgumentList $SymbolsFilePath
+        [string]$message = Get-VstsLocString -Key NoSourcePathsIn0 -ArgumentList $SymbolsFilePath
         if ($TreatNotIndexedAsWarning) {
             Write-Warning $message
         } else {
@@ -47,7 +47,7 @@ function Get-SourceFilePaths {
 
     # Warn if issues.
     if ($notUnderSourcesRootPaths.Count -or $notFoundPaths.Count) {
-        [string]$message = Get-VstsLocString -Key 'UnableToIndexOneOrMoreSourceFilesForSymbolsFile0' -ArgumentList $SymbolsFilePath
+        [string]$message = Get-VstsLocString -Key OneOrMoreSourceFilesNotIndexedFor0 -ArgumentList $SymbolsFilePath
         if ($TreatNotIndexedAsWarning) {
             Write-Warning $message
         } else  {

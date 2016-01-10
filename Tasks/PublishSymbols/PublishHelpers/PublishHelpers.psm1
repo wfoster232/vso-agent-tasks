@@ -18,13 +18,12 @@ function Invoke-PublishSymbols {
         [string]$ArtifactName)
 
     if (!$PdbFiles.Count) {
-        Write-Warning (Get-VstsLocString -Key 'NoFileSelectedForPublishing')
+        Write-Warning (Get-VstsLocString -Key NoFilesForPublishing)
         return
     }
 
     [string]$symbolsRspFile = ''
     try {
-# TODO: THIS SHOULD BE RESOLVED IN A DIFFERENT WAY
         [string]$symstorePath = Assert-VstsPath -LiteralPath "$env:Agent_HomeDirectory\Agent\Worker\Tools\Symstore\symstore.exe" -PathType Leaf -PassThru
         $symbolsRspFile = New-ResponseFile
         Invoke-PublishSymbolsCore -SymbolsRspFile $symbolsRspFile -SymstorePath $symstorePath -Share $Share -Product $Product -Version $Version -MaximumWaitTime $MaximumWaitTime -SemaphoreMessage $SemaphoreMessage -ArtifactName $ArtifactName
@@ -71,24 +70,24 @@ function Invoke-PublishSymbolsCore {
                     $yesterdayUtc = [System.DateTime]::UtcNow.Subtract($MaximumSemaphoreAge)
                     # Check if the semaphore file is older than 24h (configurable).
                     if ($creationTimeUtc -lt $yesterdayUtc -and !$attemptedDelete) { # This doesn't prevent this worker or other agents from trying to delete the file on the very next build.
-                        Write-Warning (Get-VstsLocString -Key 'SemaphoreFile0AlreadyExistsAndWasLasAccessedOver1MinutesAgoAttemptingCleanup' -ArgumentList $semaphoreFile, $MaximumSemaphoreAge.TotalMinutes)
+                        Write-Warning (Get-VstsLocString -Key SemaphoreFile0Minutes1AttemptingCleanup -ArgumentList $semaphoreFile, $MaximumSemaphoreAge.TotalMinutes)
                         if (Test-Path -LiteralPath $SemaphoreMessage -PathType Leaf) {
                             try {
                                 # Try to clean up the file.
                                 $attemptedDelete = $true
                                 [System.IO.File]::Delete($semaphoreFile)
-                                Write-Warning (Get-VstsLocString -Key 'SemaphoreFile0WasCleanedUpSuccessfully' -ArgumentList $semaphoreFile)
+                                Write-Warning (Get-VstsLocString -Key CleanedUpSemaphoreFile0 -ArgumentList $semaphoreFile)
                                 # The semaphore file was cleaned up.
                                 # Retry the loop.
                                 continue
                             } catch {
                                 # Cleanup failed. Continue to try to publish symbols.
-                                Write-Warning (Get-VstsLocString -Key 'CouldNotCleanUpExistingSemaphoreFile0Error1' -ArgumentList $semaphoreFile, $_.Message)
+                                Write-Warning (Get-VstsLocString -Key CleanUpSemaphoreFile0Error1 -ArgumentList $semaphoreFile, $_.Message)
                             }
                         }
                     }
 
-                    Write-Warning (Get-VstsLocString -Key 'SemaphoreFile0AlreadyExistsRetryingSymbolPublishingIn1Seconds', $semaphoreFile, $sleepInterval.TotalSeconds)
+                    Write-Warning (Get-VstsLocString -Key SemaphoreFile0ExistsRetrying1Seconds -ArgumentList $semaphoreFile, $sleepInterval.TotalSeconds)
                     Start-Sleep -Seconds $sleepInterval.TotalSeconds;
                     $totalSleepTime += $sleepInterval;
                     continue;
@@ -149,7 +148,7 @@ function Invoke-PublishSymbolsCore {
                 # This will occur if the file is in use by another agent (the "typical, expected" case).
                 # This will occur if the file gets created after the File.Exists check above but before File.Open.
                 # It can also occur if the server does not exist or cannot be found.
-                Write-Warning (Get-VstsLocString -Key "0AccessingSemaphoreFile1RetryingIn2Seconds", $_.Exception.Message, $semaphoreFile, $sleepInterval.TotalSeconds)
+                Write-Warning (Get-VstsLocString -Key Error0AccessingSemaphoreFile1Retrying2Seconds, $_.Exception.Message, $semaphoreFile, $sleepInterval.TotalSeconds)
 
                 # Retry if we get other IOExceptions
                 Start-Sleep -Seconds $sleepInterval.TotalSeconds
@@ -160,7 +159,7 @@ function Invoke-PublishSymbolsCore {
                 break
             } finally {
                 if ($totalSleepTime -ge $MaximumWaitTime) {
-                    Write-Error (Get-VstsLocString -Key 'SymbolPublishingCouldNotBeCompletedReachedMaximumWaitTime0Seconds' -ArgumentList $MaximumWaitTime.TotalSeconds)
+                    Write-Error (Get-VstsLocString -Key ReachedPublishingMaxWaitTime0Seconds -ArgumentList $MaximumWaitTime.TotalSeconds)
                 }
             }
         }
@@ -183,7 +182,7 @@ function Get-LastTransactionId {
         [System.IO.File]::ReadAllText($lastIdFileName).Trim()
     } else {
         $lastIdFileName = [System.IO.Path]::Combine($Share, "000Admin")
-        Write-Warning (Get-VstsLocString -Key 'SymbolStoreLastIdTxtNotFoundAt0' -ArgumentList $lastIdFileName)
+        Write-Warning (Get-VstsLocString -Key SymbolStoreLastIdTxtNotFoundAt0 -ArgumentList $lastIdFileName)
     }
 }
 

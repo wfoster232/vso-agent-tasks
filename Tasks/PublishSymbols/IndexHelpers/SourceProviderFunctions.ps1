@@ -87,8 +87,8 @@ function Get-SourceProvider {
             return New-Object psobject -Property $provider
         }
 
-        Write-Warning (Get-VstsLocString -Key 'UnsupportedSourceProviderForSourceIndexing0' -ArgumentList $provider.Name)
-        Write-Warning (Get-VstsLocString -Key 'UnableToIndexSources')
+        Write-Warning (Get-VstsLocString -Key UnsupportedSourceProvider0 -ArgumentList $provider.Name)
+        Write-Warning (Get-VstsLocString -Key UnableToIndexSources)
         return
     } finally {
         if (!$success) {

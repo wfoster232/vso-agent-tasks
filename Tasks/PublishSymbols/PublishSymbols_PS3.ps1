@@ -3,11 +3,12 @@ param()
 
 Trace-VstsEnteringInvocation $MyInvocation
 try {
+    Import-VstsLocStrings "$PSScriptRoot\Task.json"
     [string]$SymbolsPath = Get-VstsInput -Name 'SymbolsPath'
     [string]$SearchPattern = Get-VstsInput -Name 'SearchPattern' -Default "**\bin\**\*.pdb"
     if ([string]$SourceFolder = (Get-VstsInput -Name 'SourceFolder') -and
         $SourceFolder -ne (Get-VstsTaskVariable -Name 'Build.SourcesDirectory' -Require)) {
-        Write-Warning (Get-VstsLocString -Key 'SourceFolderParameterDeprecatedIgnoring0' -ArgumentList $SourceFolder)
+        Write-Warning (Get-VstsLocString -Key SourceFolderDeprecated0 -ArgumentList $SourceFolder)
     }
 
     [string]$SymbolsProduct = Get-VstsInput -Name 'SymbolsProduct' -Default (Get-VstsTaskVariable -Name 'Build.DefinitionName' -Require)
@@ -21,11 +22,11 @@ try {
 
     # Get the PDB file paths.
     $pdbFiles = @(Find-VstsFiles -LiteralDirectory $SymbolsFolder -LegacyPattern $SearchPattern)
-    Write-Host (Get-VstsLocString -Key "Found0Files" -ArgumentList $pdbFiles.Count)
+    Write-Host (Get-VstsLocString -Key Found0Files -ArgumentList $pdbFiles.Count)
 
     # Index the sources.
     if ($SkipIndexing) {
-        Write-Host (Get-VstsLocString -Key 'SkippingIndexing')
+        Write-Host (Get-VstsLocString -Key SkippingIndexing)
     } else {
         Import-Module -Name $PSScriptRoot\IndexHelpers\IndexHelpers.psm1
         Invoke-IndexSources -SymbolsFilePaths $pdbFiles -TreatNotIndexedAsWarning:$TreatNotIndexedAsWarning
