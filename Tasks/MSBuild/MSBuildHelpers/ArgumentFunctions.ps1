@@ -7,18 +7,21 @@ function Format-MSBuildArguments {
         [string]$VSVersion)
 
     Trace-VstsEnteringInvocation $MyInvocation
-    if ($Platform) {
-        $MSBuildArguments = "$MSBuildArguments /p:platform=`"$Platform`""
-    }
+    try {
+        if ($Platform) {
+            $MSBuildArguments = "$MSBuildArguments /p:platform=`"$Platform`""
+        }
 
-    if ($Configuration) {
-        $MSBuildArguments = "$MSBuildArguments /p:configuration=`"$Configuration`""
-    }
+        if ($Configuration) {
+            $MSBuildArguments = "$MSBuildArguments /p:configuration=`"$Configuration`""
+        }
 
-    if ($VSVersion) {
-        $MSBuildArguments = "$MSBuildArguments /p:VisualStudioVersion=`"$VSVersion`""
-    }
+        if ($VSVersion) {
+            $MSBuildArguments = "$MSBuildArguments /p:VisualStudioVersion=`"$VSVersion`""
+        }
 
-    $MSBuildArguments
-    Trace-VstsLeavingInvocation $MyInvocation
+        $MSBuildArguments
+    } finally {
+        Trace-VstsLeavingInvocation $MyInvocation
+    }
 }

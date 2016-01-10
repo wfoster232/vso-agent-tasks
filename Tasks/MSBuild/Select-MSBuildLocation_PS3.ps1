@@ -7,51 +7,53 @@ function Select-MSBuildLocation {
         [string]$Architecture)
 
     Trace-VstsEnteringInvocation $MyInvocation
+    try {
+        # Default the msbuildLocationMethod if not specified. The input msbuildLocationMethod
+        # was added to the definition after the input msbuildLocation.
+        if ("$Method".ToUpperInvariant() -ne 'LOCATION' -and "$Method".ToUpperInvariant() -ne 'VERSION') {
+            # Infer the msbuildLocationMethod based on the whether msbuildLocation is specified.
+            if ($Location) {
+                $Method = 'location'
+            } else {
+                $Method = 'version'
+            }
 
-    # Default the msbuildLocationMethod if not specified. The input msbuildLocationMethod
-    # was added to the definition after the input msbuildLocation.
-    if ("$Method".ToUpperInvariant() -ne 'LOCATION' -and "$Method".ToUpperInvariant() -ne 'VERSION') {
-        # Infer the msbuildLocationMethod based on the whether msbuildLocation is specified.
-        if ($Location) {
-            $Method = 'location'
-        } else {
+            Write-Verbose "Defaulted MSBuild location method to: $Method"
+        }
+
+        # Default to 'version' if the user chose 'location' but didn't specify a location.
+        if ("$Method".ToUpperInvariant() -eq 'LOCATION' -and !$Location) {
+            Write-Verbose 'Location not specified. Using version instead.'
             $Method = 'version'
         }
 
-        Write-Verbose "Defaulted MSBuild location method to: $Method"
-    }
+        if ("$Method".ToUpperInvariant() -eq 'VERSION') {
+            $Location = ''
 
-    # Default to 'version' if the user chose 'location' but didn't specify a location.
-    if ("$Method".ToUpperInvariant() -eq 'LOCATION' -and !$Location) {
-        Write-Verbose 'Location not specified. Using version instead.'
-        $Method = 'version'
-    }
+            # Look for a specific version of MSBuild.
+            if ($Version -and "$Version".ToUpperInvariant() -ne 'LATEST') {
+                $Location = Get-VstsMSBuildPath -Version $Version -Architecture $Architecture
 
-    if ("$Method".ToUpperInvariant() -eq 'VERSION') {
-        $Location = ''
+                # Warn if not found.
+                if (!$Location) {
+                    Write-Warning (Get-VstsLocString -Key 'UnableToFindMSBuildVersion0Architecture1LookingForLatestVersion.' -ArgumentList $Version, $Architecture)
+                }
+            }
 
-        # Look for a specific version of MSBuild.
-        if ($Version -and "$Version".ToUpperInvariant() -ne 'LATEST') {
-            $Location = Get-VstsMSBuildPath -Version $Version -Architecture $Architecture
-
-            # Warn if not found.
+            # Look for the latest version of MSBuild.
             if (!$Location) {
-                Write-Warning (Get-VstsLocString -Key 'UnableToFindMSBuildVersion0Architecture1LookingForLatestVersion.' -ArgumentList $Version, $Architecture)
+                Write-Verbose 'Searching for latest MSBuild version.'
+                $Location = Get-VstsMSBuildPath -Version '' -Architecture $Architecture
+
+                # Throw if not found.
+                if (!$Location) {
+                    throw (Get-VstsLocString -Key 'MSBuildNotFoundVersion0Architecture1TryDifferent' -ArgumentList $Version, $Architecture)
+                }
             }
         }
 
-        # Look for the latest version of MSBuild.
-        if (!$Location) {
-            Write-Verbose 'Searching for latest MSBuild version.'
-            $Location = Get-VstsMSBuildPath -Version '' -Architecture $Architecture
-
-            # Throw if not found.
-            if (!$Location) {
-                throw (Get-VstsLocString -Key 'MSBuildNotFoundVersion0Architecture1TryDifferent' -ArgumentList $Version, $Architecture)
-            }
-        }
+        $Location
+    } finally {
+        Trace-VstsLeavingInvocation $MyInvocation
     }
-
-    $Location
-    Trace-VstsLeavingInvocation $MyInvocation
 }
