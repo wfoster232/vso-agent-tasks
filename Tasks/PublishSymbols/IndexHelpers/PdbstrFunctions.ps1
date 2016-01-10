@@ -47,7 +47,8 @@ function Add-SourceServerStream {
                 Invoke-VstsTool -FileName $PdbStrPath -Arguments "-w -p:""$SymbolsFilePath"" -i:""$streamContentFilePath"" -s:srcsrv" -Verbose:$false 2>&1 |
                     ForEach-Object {
                         if ($_ -is [System.Management.Automation.ErrorRecord]) {
-                            Write-Error -ErrorRecord $_
+                            Write-Error -ErrorRecord $_ -ErrorAction Continue
+                            Write-VstsSetResult -Result Failed -Message $_.Exception.Message -DoNotThrow
                         } else {
                             Write-Verbose $_
                         }

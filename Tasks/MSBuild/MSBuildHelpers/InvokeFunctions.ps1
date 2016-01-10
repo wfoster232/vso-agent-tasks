@@ -303,7 +303,7 @@ function Invoke-NuGetRestore {
         }
 
         $directory = [System.IO.Path]::GetDirectoryName($file)
-        Invoke-VstsTool -FileName $nugetPath -Arguments "restore `"$file`" -NonInteractive" -WorkingDirectory $directory
+        Invoke-VstsTool -FileName $nugetPath -Arguments "restore `"$file`" -NonInteractive" -WorkingDirectory $directory -RequireExitCodeZero
     } finally {
         Trace-VstsLeavingInvocation $MyInvocation
     }
