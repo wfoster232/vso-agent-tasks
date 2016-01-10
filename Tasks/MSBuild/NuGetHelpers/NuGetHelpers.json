@@ -1,0 +1,5 @@
+{
+  "messages": {
+    "NG_DetectedNuGetExtensionsLoaderPath0": "Detected NuGet extensions loader path. Environment variable NUGET_EXTENSIONS_PATH is set to '{0}'."
+  }
+}

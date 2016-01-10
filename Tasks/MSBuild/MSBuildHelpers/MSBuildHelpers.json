@@ -1,5 +1,5 @@
 {
   "messages": {
-    "Build0" : "Build {0}"
+    "MSB_Build0" : "Build {0}"
   }
 }

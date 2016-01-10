@@ -117,5 +117,22 @@
             "argumentFormat": "",
             "workingDirectory": "$(currentDirectory)"
         }
+    },
+    "messages": {
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "MSBuildLocationParameterDeprecated0": "The MSBuild location parameter has been deprecated. Ignoring value: {0}",
+        "MSBuildNotFoundVersion0Architecture1": "MSBuild not found for version '{0}' and architecture '{1}'.",
+        "MSBuildVersionDeprecated0": "The MSBuild version parameter has been deprecated. Ignoring value: {0}",
+        "UnexpectedVSVersion0": "Unexpected Visual Studio version '{0}'.",
+        "VSLocationParameterDeprecated0": "The Visual Studio location parameter has been deprecated. Ignoring value: {0}",
+        "VSNotFoundTry": "Visual Studio not found. Try installing a supported version of Visual Studio. See the task definition for a list of supported versions.",
+        "VSVersion0NotFoundLookingForLatest": "Visual Studio version '{0}' not found. Looking for the latest version.",
+        "": ""
     }
 }

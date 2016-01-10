@@ -1,9 +1,11 @@
 [CmdletBinding()]
 param()
-Import-LocStrings "$PSScriptRoot\MSBuildHelpers.json"
-. $PSScriptRoot\PublicFunctions
-. $PSScriptRoot\PrivateFunctions
+Import-VstsLocStrings "$PSScriptRoot\MSBuildHelpers.json"
+. $PSScriptRoot\InvokeFunctions
+. $PSScriptRoot\PathFunctions
 Export-ModuleMember -Function @(
-    'Get-MSBuildPath'
+    # Invoke functions.
     'Invoke-MSBuild'
+    # Path functions.
+    'Get-MSBuildPath'
 )
