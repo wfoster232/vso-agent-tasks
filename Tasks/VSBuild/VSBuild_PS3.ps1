@@ -28,7 +28,7 @@ try {
         $msBuildVersion = $null
     }
 
-    if (!OmitDotSource) {
+    if (!$OmitDotSource) {
         . $PSScriptRoot\Get-VSPath_PS3.ps1
         . $PSScriptRoot\Select-MSBuildLocation_PS3.ps1
         . $PSScriptRoot\Select-VSVersion_PS3.ps1
@@ -39,6 +39,7 @@ try {
     $VSVersion = Select-VSVersion -PreferredVersion $VSVersion
     $MSBuildLocation = Select-MSBuildLocation -VSVersion $VSVersion -Architecture $MSBuildArchitecture
     $MSBuildArgs = Format-MSBuildArguments -MSBuildArguments $MSBuildArgs -Platform $Platform -Configuration $Configuration -VSVersion $VSVersion
+    $ErrorActionPreference = 'Continue'
     Invoke-BuildTools -NuGetRestore:$RestoreNuGetPackages -SolutionFiles $solutionFiles -MSBuildLocation $MSBuildLocation -MSBuildArguments $MSBuildArgs -Clean:$Clean -NoTimelineLogger:(!$LogProjectEvents)
 } finally {
     Trace-VstsLeavingInvocation $MyInvocation

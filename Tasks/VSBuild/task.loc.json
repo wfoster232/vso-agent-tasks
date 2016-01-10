@@ -113,7 +113,7 @@
   "instanceNameFormat": "ms-resource:loc.instanceNameFormat",
   "execution": {
     "PowerShell3": {
-      "target": "VSBuild_PS3.ps1"
+      "target": "$(currentDirectory)\\VSBuild_PS3.ps1"
     },
     "PowerShell": {
       "target": "$(currentDirectory)\\VSBuild.ps1",

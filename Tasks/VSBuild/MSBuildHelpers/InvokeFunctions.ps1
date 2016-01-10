@@ -223,7 +223,7 @@ function Invoke-MSBuild {
             $detailId = [guid]::NewGuid()
             $detailName = Get-VstsLocString -Key MSB_Build0 -ArgumentList ([System.IO.Path]::GetFileName($ProjectFile))
             $detailStartTime = [datetime]::UtcNow.ToString('O')
-            Write-LogDetail -Id $detailId -Type Process -Name $detailName -Progress 0 -StartTime $detailStartTime -State Initialized -AsOutput
+            Write-VstsLogDetail -Id $detailId -Type Process -Name $detailName -Progress 0 -StartTime $detailStartTime -State Initialized -AsOutput
         }
 
         $detailResult = 'Succeeded'
@@ -277,11 +277,15 @@ function Invoke-MSBuild {
                         }
                     }
             }
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-VstsSetResult -Result Failed -DoNotThrow
+            }
         } finally {
             # Complete the detail timeline.
             if (!$NoTimelineLogger) {
                 $detailFinishTime = [datetime]::UtcNow.ToString('O')
-                Write-LogDetail -Id $detailId -FinishTime $detailFinishTime -Progress 100 -State Completed -Result $detailResult -AsOutput
+                Write-VstsLogDetail -Id $detailId -FinishTime $detailFinishTime -Progress 100 -State Completed -Result $detailResult -AsOutput
             }
         }
     } finally {
@@ -304,6 +308,9 @@ function Invoke-NuGetRestore {
 
         $directory = [System.IO.Path]::GetDirectoryName($file)
         Invoke-VstsTool -FileName $nugetPath -Arguments "restore `"$file`" -NonInteractive" -WorkingDirectory $directory -RequireExitCodeZero
+        if ($LASTEXITCODE -ne 0) {
+            Write-VstsSetResult -Result Failed -DoNotThrow
+        }
     } finally {
         Trace-VstsLeavingInvocation $MyInvocation
     }
