@@ -1,3 +1,8 @@
+################################################################################
+# THIS MODULE IS MASTERED UNDER THE MSBUILD TASK FOLDER. ANY EDITS SHOULD BE
+# MADE THERE AND COPIED TO THE VSBUILD TASK FOLDER.
+################################################################################
+
 [CmdletBinding()]
 param()
 Import-VstsLocStrings "$PSScriptRoot\MSBuildHelpers.json"
