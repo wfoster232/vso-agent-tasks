@@ -11,124 +11,27 @@ $script:loggingCommandEscapeMappings = @( # TODO: WHAT ABOUT "="? WHAT ABOUT "%"
 ########################################
 # Public functions.
 ########################################
-function Invoke-MSBuild {
+function Invoke-BuildTools {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true, Position = 1)]
-        [string]$ProjectFile,
-        [string]$Targets,
-        [string]$LogFile,
-        [switch]$NoTimelineLogger,
-        [string]$MSBuildPath,
-        [string]$AdditionalArguments)
+        [switch]$NuGetRestore,
+        [string[]]$SolutionFiles,
+        [string]$MSBuildLocation,
+        [string]$MSBuildArguments,
+        [switch]$Clean,
+        [switch]$NoTimelineLogger)
 
     Trace-VstsEnteringInvocation $MyInvocation
-
-    # Get the MSBuild path.
-    if (!$MSBuildPath) {
-        $MSBuildPath = Get-MSBuildPath
-    } else {
-        $MSBuildPath = [System.Environment]::ExpandEnvironmentVariables($MSBuildPath)
-        if (!$MSBuildPath -like '*msbuild.exe') {
-            $MSBuildPath = [System.IO.Path]::Combine($MSBuildPath, 'msbuild.exe')
+    foreach ($file in $SolutionFiles) {
+        if ($NuGetRestore) {
+            Invoke-NuGetRestore -File $file
         }
-    }
 
-    # Validate the path exists.
-    $null = Assert-VstsPath -LiteralPath $MSBuildPath -PathType Leaf
-
-    # Don't show the logo and do not allow node reuse so all child nodes are shut down once the master
-    # node has completed build orchestration.
-    $arguments = "`"$ProjectFile`" /nologo /m /nr:false"
-
-    # Add the targets if specified.
-    if ($Targets) {
-        $arguments = "$arguments /t:`"$Targets`""
-    }
-
-    # If a log file was specified then hook up the default file logger.
-    if ($LogFile) {
-        $arguments = "$arguments /fl /flp:`"logfile=$LogFile`""
-    }
-
-    # Always hook up the timeline logger. If project events are not requested then we will simply drop those
-    # messages on the floor.
-    $loggerAssembly = "$(Get-VstsTaskVariable -Name Agent.HomeDirectory -Require)\Agent\Worker\Microsoft.TeamFoundation.DistributedTask.MSBuild.Logger.dll"
-    $null = Assert-VstsPath -LiteralPath $loggerAssembly -PathType Leaf
-    $arguments = "$arguments /dl:CentralLogger,`"$loggerAssembly`"*ForwardingLogger,`"$loggerAssembly`""
-
-    if ($AdditionalArguments) {
-        $arguments = "$arguments $AdditionalArguments"
-    }
-
-    # Store the solution folder so we can provide solution-relative paths (for now).
-    $solutionDirectory = [System.IO.Path]::GetDirectoryName($ProjectFile)
-
-    # Start the detail timeline.
-    if (!$NoTimelineLogger) {
-        $detailId = [guid]::NewGuid()
-        $detailName = Get-VstsLocString -Key MSB_Build0 -ArgumentList ([System.IO.Path]::GetFileName($ProjectFile))
-        $detailStartTime = [datetime]::UtcNow.ToString('O')
-        Write-LogDetail -Id $detailId -Type Process -Name $detailName -Progress 0 -StartTime $detailStartTime -State Initialized -AsOutput
-    }
-
-    $detailResult = 'Succeeded'
-    try {
-        if ($NoTimelineLogger) {
-            Invoke-VstsTool -FileName $MSBuildPath -Arguments $arguments -RequireExitCodeZero
-        } else {
-            Invoke-VstsTool -FileName $MSBuildPath -Arguments $arguments -RequireExitCodeZero |
-                ForEach-Object {
-                    # TODO: THIS COULD PROBABLY BE SPED UP BY CHECKING FOR "##vso" BEFORE CALLING THE FUNCTION.
-                    # IT WOULD BE A REDUNDANT CHECK. HOWEVER, THE ##vso COMMANDS APPEAR VERY INFREQUENTLY IN
-                    # THE OUTPUT RELATIVE TO THE TOTAL OUTPUT.
-                    if ($command = ConvertFrom-SerializedLoggingCommand -Message $_) {
-                        if ($command.Area -eq 'task' -and
-                            $command.Event -eq 'logissue' -and
-                            $command.Properties['type'] -eq 'error') {
-
-                            # An error issue was detected. Set the result to Failed for the logdetail completed event.
-                            $detailResult = 'Failed'
-                        } elseif ($command.Area -eq 'task' -and
-                            $command.Event -eq 'logdetail' -and
-                            !$NoTimelineLogger) {
-
-                            if (!($parentProjectId = $command.Properties['parentid']) -or
-                                [guid]$parentProjectId -eq [guid]::Empty) {
-
-                                # Default the parent ID to the root ID.
-                                $command.Properties['parentid'] = $detailId.ToString('D')
-                            }
-
-                            if ($projFile = $command.Properties['name']) {
-                                # Make the project file relative.
-                                if ($projFile.StartsWith("$solutionDirectory\", [System.StringComparison]::OrdinalIgnoreCase)) {
-                                    $projFile = $projFile.Substring($solutionDirectory.Length).TrimStart('\'[0])
-                                } else {
-                                    $projFile = [System.IO.Path]::GetFileName($projFile)
-                                }
-
-                                # If available, add the targets to the name.
-                                if ($targetNames = $command.Properties['targetnames']) {
-                                    $projFile = "$projFile ($targetNames)"
-                                }
-
-                                $command.Properties['name'] = $projFile
-                            }
-                        }
-
-                        Write-LoggingCommand -Command $command -AsOutput
-                    } else {
-                        $_
-                    }
-                }
+        if ($Clean) {
+            Invoke-MSBuild -ProjectFile $file -Targets Clean -LogFile "$file-clean.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
         }
-    } finally {
-        # Complete the detail timeline.
-        if (!$NoTimelineLogger) {
-            $detailFinishTime = [datetime]::UtcNow.ToString('O')
-            Write-LogDetail -Id $detailId -FinishTime $detailFinishTime -Progress 100 -State Completed -Result $detailResult -AsOutput
-        }
+
+        Invoke-MSBuild -ProjectFile $file -LogFile "$file.log" -MSBuildPath $MSBuildLocation -AdditionalArguments $MSBuildArguments -NoTimelineLogger:$NoTimelineLogger
     }
 
     Trace-VstsLeavingInvocation $MyInvocation
@@ -258,6 +161,146 @@ function Format-LoggingCommandData {
     }
 
     return $Value
+}
+
+function Invoke-MSBuild {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]$ProjectFile,
+        [string]$Targets,
+        [string]$LogFile,
+        [switch]$NoTimelineLogger,
+        [string]$MSBuildPath,
+        [string]$AdditionalArguments)
+
+    Trace-VstsEnteringInvocation $MyInvocation
+
+    # Get the MSBuild path.
+    if (!$MSBuildPath) {
+        $MSBuildPath = Get-MSBuildPath
+    } else {
+        $MSBuildPath = [System.Environment]::ExpandEnvironmentVariables($MSBuildPath)
+        if (!$MSBuildPath -like '*msbuild.exe') {
+            $MSBuildPath = [System.IO.Path]::Combine($MSBuildPath, 'msbuild.exe')
+        }
+    }
+
+    # Validate the path exists.
+    $null = Assert-VstsPath -LiteralPath $MSBuildPath -PathType Leaf
+
+    # Don't show the logo and do not allow node reuse so all child nodes are shut down once the master
+    # node has completed build orchestration.
+    $arguments = "`"$ProjectFile`" /nologo /m /nr:false"
+
+    # Add the targets if specified.
+    if ($Targets) {
+        $arguments = "$arguments /t:`"$Targets`""
+    }
+
+    # If a log file was specified then hook up the default file logger.
+    if ($LogFile) {
+        $arguments = "$arguments /fl /flp:`"logfile=$LogFile`""
+    }
+
+    # Always hook up the timeline logger. If project events are not requested then we will simply drop those
+    # messages on the floor.
+    $loggerAssembly = "$(Get-VstsTaskVariable -Name Agent.HomeDirectory -Require)\Agent\Worker\Microsoft.TeamFoundation.DistributedTask.MSBuild.Logger.dll"
+    $null = Assert-VstsPath -LiteralPath $loggerAssembly -PathType Leaf
+    $arguments = "$arguments /dl:CentralLogger,`"$loggerAssembly`"*ForwardingLogger,`"$loggerAssembly`""
+
+    if ($AdditionalArguments) {
+        $arguments = "$arguments $AdditionalArguments"
+    }
+
+    # Store the solution folder so we can provide solution-relative paths (for now).
+    $solutionDirectory = [System.IO.Path]::GetDirectoryName($ProjectFile)
+
+    # Start the detail timeline.
+    if (!$NoTimelineLogger) {
+        $detailId = [guid]::NewGuid()
+        $detailName = Get-VstsLocString -Key MSB_Build0 -ArgumentList ([System.IO.Path]::GetFileName($ProjectFile))
+        $detailStartTime = [datetime]::UtcNow.ToString('O')
+        Write-LogDetail -Id $detailId -Type Process -Name $detailName -Progress 0 -StartTime $detailStartTime -State Initialized -AsOutput
+    }
+
+    $detailResult = 'Succeeded'
+    try {
+        if ($NoTimelineLogger) {
+            Invoke-VstsTool -FileName $MSBuildPath -Arguments $arguments -RequireExitCodeZero
+        } else {
+            Invoke-VstsTool -FileName $MSBuildPath -Arguments $arguments -RequireExitCodeZero |
+                ForEach-Object {
+                    # TODO: THIS COULD PROBABLY BE SPED UP BY CHECKING FOR "##vso" BEFORE CALLING THE FUNCTION.
+                    # IT WOULD BE A REDUNDANT CHECK. HOWEVER, THE ##vso COMMANDS APPEAR VERY INFREQUENTLY IN
+                    # THE OUTPUT RELATIVE TO THE TOTAL OUTPUT.
+                    if ($command = ConvertFrom-SerializedLoggingCommand -Message $_) {
+                        if ($command.Area -eq 'task' -and
+                            $command.Event -eq 'logissue' -and
+                            $command.Properties['type'] -eq 'error') {
+
+                            # An error issue was detected. Set the result to Failed for the logdetail completed event.
+                            $detailResult = 'Failed'
+                        } elseif ($command.Area -eq 'task' -and
+                            $command.Event -eq 'logdetail' -and
+                            !$NoTimelineLogger) {
+
+                            if (!($parentProjectId = $command.Properties['parentid']) -or
+                                [guid]$parentProjectId -eq [guid]::Empty) {
+
+                                # Default the parent ID to the root ID.
+                                $command.Properties['parentid'] = $detailId.ToString('D')
+                            }
+
+                            if ($projFile = $command.Properties['name']) {
+                                # Make the project file relative.
+                                if ($projFile.StartsWith("$solutionDirectory\", [System.StringComparison]::OrdinalIgnoreCase)) {
+                                    $projFile = $projFile.Substring($solutionDirectory.Length).TrimStart('\'[0])
+                                } else {
+                                    $projFile = [System.IO.Path]::GetFileName($projFile)
+                                }
+
+                                # If available, add the targets to the name.
+                                if ($targetNames = $command.Properties['targetnames']) {
+                                    $projFile = "$projFile ($targetNames)"
+                                }
+
+                                $command.Properties['name'] = $projFile
+                            }
+                        }
+
+                        Write-LoggingCommand -Command $command -AsOutput
+                    } else {
+                        $_
+                    }
+                }
+        }
+    } finally {
+        # Complete the detail timeline.
+        if (!$NoTimelineLogger) {
+            $detailFinishTime = [datetime]::UtcNow.ToString('O')
+            Write-LogDetail -Id $detailId -FinishTime $detailFinishTime -Progress 100 -State Completed -Result $detailResult -AsOutput
+        }
+    }
+
+    Trace-VstsLeavingInvocation $MyInvocation
+}
+
+function Invoke-NuGetRestore {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]$File)
+
+    Trace-VstsEnteringInvocation $MyInvocation
+    $nugetPath = Assert-VstsPath -LiteralPath "$(Get-VstsTaskVariable -Name Agent.HomeDirectory -Require)\Agent\Worker\Tools\NuGet.exe" -PathType Leaf -PassThru
+    if ($env:NUGET_EXTENSIONS_PATH) {
+        Write-Host (Get-VstsLocString -Key MSB_DetectedNuGetExtensionsLoaderPath0 -ArgumentList $env:NUGET_EXTENSIONS_PATH)
+    }
+
+    $directory = [System.IO.Path]::GetDirectoryName($file)
+    Invoke-VstsTool -FileName $nugetPath -Arguments "restore `"$file`" -NonInteractive" -WorkingDirectory $directory
+    Trace-VstsLeavingInvocation $MyInvocation
 }
 
 function Write-LoggingCommand {

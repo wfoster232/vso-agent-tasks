@@ -115,3 +115,23 @@ function Get-MSBuildPath {
 
     Trace-VstsLeavingInvocation $MyInvocation
 }
+
+function Get-SolutionFiles {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Solution)
+
+    Trace-VstsEnteringInvocation $MyInvocation
+    if ($Solution.Contains("*") -or $Solution.Contains("?")) {
+        $solutionFiles = Find-VstsFiles -LegacyPattern $Solution
+        if (!$solutionFiles.Count) {
+            throw (Get-VstsLocString -Key MSB_SolutionNotFoundUsingSearchPattern0 -ArgumentList $Solution)
+        }
+    } else {
+        $solutionFiles = ,$Solution
+    }
+
+    $solutionFiles
+    Trace-VstsLeavingInvocation $MyInvocation
+}

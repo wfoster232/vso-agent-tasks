@@ -1,4 +1,4 @@
-function Get-VisualStudioPath {
+function Get-VSPath {
     [CmdletBinding()]
     param([string]$Version)
 

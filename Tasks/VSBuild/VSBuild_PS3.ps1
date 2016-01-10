@@ -2,31 +2,37 @@
 param([switch]$OmitDotSource)
 
 Trace-VstsEnteringInvocation $MyInvocation
-[string]$VSVersion = Get-VstsInput -Name VSVersion
-[string]$MSBuildArchitecture = Get-VstsInput -Name MSBuildArchitecture
-[string]$MSBuildArgs = Get-VstsInput -Name MSBuildArgs
-[string]$Solution = Get-VstsInput -Name Solution -Require
-[string]$Platform = Get-VstsInput -Name Platform
-[string]$Configuration = Get-VstsInput -Name Configuration
-[bool]$Clean = Get-VstsInput -Name Clean -AsBool
-[bool]$RestoreNugetPackages = Get-VstsInput -Name RestoreNugetPackages -AsBool
-[bool]$LogProjectEvents = Get-VstsInput -Name LogProjectEvents -AsBool
-if ([string]$VSLocation = Get-VstsInput -Name VSLocation) {
-    Write-Warning (Get-LocString -Key VSLocationDeprecated0 -ArgumentList $VSLocation)
-    $VSLocation = $null
+Import-VstsLocStrings "$PSScriptRoot\Task.json"
+[string]$vsVersion = Get-VstsInput -Name VSVersion
+[string]$msBuildArchitecture = Get-VstsInput -Name MSBuildArchitecture
+[string]$msBuildArgs = Get-VstsInput -Name MSBuildArgs
+[string]$solution = Get-VstsInput -Name Solution -Require
+[string]$platform = Get-VstsInput -Name Platform
+[string]$configuration = Get-VstsInput -Name Configuration
+[bool]$clean = Get-VstsInput -Name Clean -AsBool
+[bool]$restoreNugetPackages = Get-VstsInput -Name RestoreNugetPackages -AsBool
+[bool]$logProjectEvents = Get-VstsInput -Name LogProjectEvents -AsBool
+if ([string]$vsLocation = Get-VstsInput -Name VSLocation) {
+    Write-Warning (Get-VstsLocString -Key VSLocationDeprecated0 -ArgumentList $vsLocation)
+    $vsLocation = $null
 }
 
-if ([string]$MSBuildLocation = Get-VstsInput -Name MSBuildLocation) {
-    Write-Warning (Get-LocString -Key MSBuildLocationDeprecated0 -ArgumentList $MSBuildLocation)
-    $MSBuildLocation = $null
+if ([string]$msBuildLocation = Get-VstsInput -Name MSBuildLocation) {
+    Write-Warning (Get-VstsLocString -Key MSBuildLocationDeprecated0 -ArgumentList $msBuildLocation)
+    $msBuildLocation = $null
 }
 
-if ([string]$MSBuildVersion = Get-VstsInput -Name MSBuildVersion) {
-    Write-Warning (Get-LocString -Key MSBuildVersionDeprecated0 -ArgumentList $MSBuildVersion)
-    $MSBuildVersion = $null
+if ([string]$msBuildVersion = Get-VstsInput -Name MSBuildVersion) {
+    Write-Warning (Get-VstsLocString -Key MSBuildVersionDeprecated0 -ArgumentList $msBuildVersion)
+    $msBuildVersion = $null
 }
 
-Import-Module -Name $PSScriptRoot\Helpers\Helpers.psm1
+if (!OmitDotSource) {
+    . $PSScriptRoot\Get-VSPath_PS3.ps1
+    . $PSScriptRoot\Select-MSBuildLocation_PS3.ps1
+    . $PSScriptRoot\Select-VSVersion_PS3.ps1
+}
+
 Import-Module -Name $PSScriptRoot\MSBuildHelpers\MSBuildHelpers.psm1
 $solutionFiles = Get-SolutionFiles -Solution $Solution
 $VSVersion = Select-VSVersion -PreferredVersion $VSVersion
