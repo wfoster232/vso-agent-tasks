@@ -110,7 +110,7 @@
     "instanceNameFormat": "Build solution $(solution)",
     "execution": {
         "PowerShell3": {
-            "target": "$(currentDirectory)\\VSBuild_PS3.ps1"
+            "target": "VSBuild_PS3.ps1"
         },
         "PowerShell": {
             "target": "$(currentDirectory)\\VSBuild.ps1",
