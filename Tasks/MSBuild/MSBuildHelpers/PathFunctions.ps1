@@ -26,7 +26,7 @@ function Get-MSBuildPath {
         while ($msUtilities -eq $null -and $index -lt $msbuildUtilitiesAssemblies.Length) {
             try {
                 $msUtilities = [System.Reflection.Assembly]::Load((New-Object System.Reflection.AssemblyName($msbuildUtilitiesAssemblies[$index])))
-            } catch [FileNotFoundException] { }
+            } catch [System.IO.FileNotFoundException] { }
 
             $index++
         }
