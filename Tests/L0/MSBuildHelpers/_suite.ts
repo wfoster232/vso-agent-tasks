@@ -22,6 +22,12 @@ describe('MSBuildHelpers Suite', function () {
     });
 
     if (ps) {
+        it('(ConvertFrom-SerializedLoggingCommand) ignores malformed commands', (done) => {
+            psm.runPS(path.join(__dirname, 'ConvertFrom-SerializedLoggingCommand.IgnoresMalformedCommands.ps1'), done);
+        })
+        it('(ConvertFrom-SerializedLoggingCommand) parses into objects', (done) => {
+            psm.runPS(path.join(__dirname, 'ConvertFrom-SerializedLoggingCommand.ParsesIntoObjects.ps1'), done);
+        })
         it('(Format-MSBuildArguments) adds configuration property', (done) => {
             psm.runPS(path.join(__dirname, 'Format-MSBuildArguments.AddsConfigurationProperty.ps1'), done);
         })
