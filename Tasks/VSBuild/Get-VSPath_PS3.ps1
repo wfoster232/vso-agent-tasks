@@ -2,12 +2,13 @@ function Get-VSPath {
     [CmdletBinding()]
     param([string]$Version)
 
-    Trace-EnteringInvocation $MyInvocation
+    Trace-VstsEnteringInvocation $MyInvocation
     try {
         # Default to all versions if not specified.
         if ($Version) {
             $versionsToTry = ,$Version
         } else {
+            # TODO: THIS ELSE BLOCK ISN'T NEEDED AT ALL. ADD TESTS, CHANGE THE PARAM TO MANDATORY, AND REMOVE THIS ELSE BLOCK.
             # Upstream callers depend on the sort order.
             $versionsToTry = "14.0", "12.0", "11.0", "10.0"
         }
@@ -18,6 +19,6 @@ function Get-VSPath {
             }
         }
     } finally {
-        Trace-LeavingInvocation $MyInvocation
+        Trace-VstsLeavingInvocation $MyInvocation
     }
 }
