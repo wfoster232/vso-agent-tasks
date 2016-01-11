@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$OmitDotSource)
+param()
 
 Trace-VstsEnteringInvocation $MyInvocation
 try {
@@ -15,10 +15,7 @@ try {
     [bool]$logProjectEvents = Get-VstsInput -Name LogProjectEvents -AsBool
     [string]$msBuildVersion = Get-VstsInput -Name MSBuildVersion
     [string]$msBuildArchitecture = Get-VstsInput -Name MSBuildArchitecture
-    if (!$OmitDotSource) {
-        . $PSScriptRoot\Select-MSBuildLocation_PS3.ps1
-    }
-
+    . $PSScriptRoot\Select-MSBuildLocation_PS3.ps1
     Import-Module -Name $PSScriptRoot\MSBuildHelpers\MSBuildHelpers.psm1
     $solutionFiles = Get-SolutionFiles -Solution $solution
     $msBuildArguments = Format-MSBuildArguments -MSBuildArguments $msBuildArguments -Platform $platform -Configuration $configuration
